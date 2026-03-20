@@ -1,0 +1,10 @@
+const router = require('express').Router();
+const { ingestTransaction, getTransactions, getTransactionById, reviewTransaction, getStats } = require('../controllers/transaction.controller');
+const { protect } = require('../middlewares/auth.middleware');
+router.use(protect);
+router.post('/ingest', ingestTransaction);
+router.get('/', getTransactions);
+router.get('/stats/summary', getStats);
+router.get('/:id', getTransactionById);
+router.patch('/:id/review', reviewTransaction);
+module.exports = router;
