@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://fraud-backend-lb7d.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
