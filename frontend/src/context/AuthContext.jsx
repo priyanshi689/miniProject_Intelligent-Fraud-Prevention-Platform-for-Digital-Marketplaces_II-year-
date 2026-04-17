@@ -1,47 +1,42 @@
-// frontend/src/context/SocketContext.jsx
-// Replace your existing SocketContext with this
+import { createContext, useContext, useState, useEffect } from "react";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
+const AuthContext = createContext(null);
 
-const SocketContext = createContext(null);
-
-const BACKEND_URL =
-  import.meta.env.VITE_API_URL || "https://fraud-backend-lb7d.onrender.com";
-
-export function SocketProvider({ children }) {
-  const socketRef = useRef(null);
-  const [connected, setConnected] = useState(false);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
-    socketRef.current = io(BACKEND_URL, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 10,
-    });
-
-    socketRef.current.on("connect", () => setConnected(true));
-    socketRef.current.on("disconnect", () => setConnected(false));
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
+    const userData = localStorage.getItem("user");
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+    }
+    setLoading(false);
   }, []);
 
+  const login = (userData, token) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
   return (
-    <SocketContext.Provider value={{ socket: socketRef.current, connected }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
-    </SocketContext.Provider>
+    </AuthContext.Provider>
   );
 }
 
-// ✅ Named export so AlertToast can import { useSocket }
-export function useSocket() {
-  return useContext(SocketContext);
-}
+// ✅ This is what Sidebar.jsx needs
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
 
-export default SocketContext;
+export default AuthContext;
