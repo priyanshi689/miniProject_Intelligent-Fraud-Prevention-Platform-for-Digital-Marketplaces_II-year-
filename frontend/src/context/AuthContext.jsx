@@ -34,7 +34,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-// ✅ This is what Sidebar.jsx needs
 export const useAuth = () => {
   return useContext(AuthContext);
 };
