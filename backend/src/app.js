@@ -13,6 +13,23 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    service: "FraudGuard API",
+    version: "1.0.0",
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      auth:         "/api/auth",
+      transactions: "/api/transactions",
+      fraud:        "/api/fraud",
+      graph:        "/api/graph",
+      cases:        "/api/cases",
+      health:       "/api/health",
+    },
+  });
+});
+
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: 'Too many requests' });
 app.use('/api', limiter);
 
