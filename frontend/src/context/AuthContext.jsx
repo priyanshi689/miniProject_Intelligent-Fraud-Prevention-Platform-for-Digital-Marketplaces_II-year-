@@ -1,30 +1,47 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+// frontend/src/context/SocketContext.jsx
+// Replace your existing SocketContext with this
 
-const AuthContext = createContext(null);
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+const SocketContext = createContext(null);
+
+const BACKEND_URL =
+  import.meta.env.VITE_API_URL || "https://fraud-backend-lb7d.onrender.com";
+
+export function SocketProvider({ children }) {
+  const socketRef = useRef(null);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      authAPI.getMe().then(res => { setUser(res.data.user); setLoading(false); })
-        .catch(() => { localStorage.removeItem('token'); setLoading(false); });
-    } else { setLoading(false); }
+    const token = localStorage.getItem("token");
+
+    socketRef.current = io(BACKEND_URL, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 10,
+    });
+
+    socketRef.current.on("connect", () => setConnected(true));
+    socketRef.current.on("disconnect", () => setConnected(false));
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
   }, []);
 
-  const login = async (email, password) => {
-    const res = await authAPI.login({ email, password });
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
-    return res.data;
-  };
+  return (
+    <SocketContext.Provider value={{ socket: socketRef.current, connected }}>
+      {children}
+    </SocketContext.Provider>
+  );
+}
 
-  const logout = () => { localStorage.removeItem('token'); setUser(null); };
+// ✅ Named export so AlertToast can import { useSocket }
+export function useSocket() {
+  return useContext(SocketContext);
+}
 
-  return <AuthContext.Provider value={{ user, login, logout, loading }}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => useContext(AuthContext);
+export default SocketContext;
