@@ -30,6 +30,7 @@ export default function App() {
     <Provider store={store}>
       <AuthProvider>
         <SocketProvider>
+          <AlertToastContainer />
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
