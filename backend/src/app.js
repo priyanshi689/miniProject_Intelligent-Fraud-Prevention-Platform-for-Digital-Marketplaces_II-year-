@@ -31,6 +31,15 @@ app.get("/", (req, res) => {
 });
 
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: 'Too many requests' });
+app.get("/api/seed", async (req, res) => {
+  try {
+    require('../../../database/seeds/run.js');
+    res.json({ message: "Seeding completed!" });
+  } catch(err) {
+    res.json({ error: err.message });
+  }
+});
+
 app.use('/api', limiter);
 
 app.use('/api/auth', require('./routes/auth.routes'));
