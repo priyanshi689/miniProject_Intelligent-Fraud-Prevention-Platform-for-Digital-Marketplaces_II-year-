@@ -30,16 +30,32 @@ app.get("/", (req, res) => {
   });
 });
 
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: 'Too many requests' });
 app.get("/api/seed", async (req, res) => {
   try {
-    // dotenv already loaded by backend, just run the seed
-    process.env.MONGO_URI = process.env.MONGO_URI; // ensure it's set
-    delete require.cache[require.resolve('../../database/seeds/run.js')];
-    require('../../database/seeds/run.js');
-    setTimeout(() => {
-      res.json({ message: "Seeding started! Check database in 10 seconds." });
-    }, 2000);
+    const mongoose = require('mongoose');
+    const bcrypt = require('bcryptjs');
+    
+    // Get existing models
+    const User = mongoose.model('User');
+    const Transaction = mongoose.model('Transaction');
+    const FraudCase = mongoose.model('FraudCase');
+
+    // Clear existing data
+    await User.deleteMany({});
+    await Transaction.deleteMany({});
+    await FraudCase.deleteMany({});
+
+    // Create admin user
+    const adminPwd = await bcrypt.hash('Admin@1234', 12);
+    await User.create({
+      userId: 'admin-001',
+      email: 'admin@fraudguard.io',
+      password: adminPwd,
+      name: 'Admin User',
+      role: 'admin'
+    });
+
+    res.json({ message: "Seeding completed successfully!" });
   } catch(err) {
     res.json({ error: err.message });
   }
