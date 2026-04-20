@@ -35,7 +35,6 @@ const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500, message: 'Too ma
 app.get("/api/seed", async (req, res) => {
   try {
     const mongoose = require('mongoose');
-    const bcrypt = require('bcryptjs');
     
     const User = mongoose.model('User');
     const Transaction = mongoose.model('Transaction');
@@ -44,19 +43,19 @@ app.get("/api/seed", async (req, res) => {
     await Transaction.deleteMany({});
 
 const adminPwd = await bcrypt.hash('Admin1234', 10);
-    await User.create({
-      userId: 'admin-001',
-      email: 'admin@fraudguard.io',
-      password: adminPwd,
-      name: 'Admin User',
-      role: 'admin',
-      riskScore: 0,
-      riskLevel: 'low',
-      isFlagged: false,
-      totalTransactions: 20,
-      flaggedTransactions: 4
-    });
-
+    // Remove the bcrypt lines and just do:
+await User.create({
+  userId: 'admin-001',
+  email: 'admin@fraudguard.io',
+  password: 'Admin1234',  // plain text - model will hash it
+  name: 'Admin User',
+  role: 'admin',
+  riskScore: 0,
+  riskLevel: 'low',
+  isFlagged: false,
+  totalTransactions: 20,
+  flaggedTransactions: 4
+});
     const txTypes = ['purchase','transfer','withdrawal','payment'];
     const riskLevels = ['low','medium','high','critical'];
     const txDocs = Array.from({length: 20}, (_, i) => ({
