@@ -43,7 +43,7 @@ app.get("/api/seed", async (req, res) => {
     await User.deleteMany({});
     await Transaction.deleteMany({});
 
-    const adminPwd = await bcrypt.hash('Admin@1234', 12);
+const adminPwd = await bcrypt.hash('Admin1234', 10);
     await User.create({
       userId: 'admin-001',
       email: 'admin@fraudguard.io',
