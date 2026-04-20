@@ -33,8 +33,13 @@ app.get("/", (req, res) => {
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: 'Too many requests' });
 app.get("/api/seed", async (req, res) => {
   try {
+    // dotenv already loaded by backend, just run the seed
+    process.env.MONGO_URI = process.env.MONGO_URI; // ensure it's set
+    delete require.cache[require.resolve('../../database/seeds/run.js')];
     require('../../database/seeds/run.js');
-    res.json({ message: "Seeding completed!" });
+    setTimeout(() => {
+      res.json({ message: "Seeding started! Check database in 10 seconds." });
+    }, 2000);
   } catch(err) {
     res.json({ error: err.message });
   }
