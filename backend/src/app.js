@@ -65,7 +65,7 @@ app.get("/api/seed", async (req, res) => {
       amount: Math.floor(Math.random() * 5000) + 100,
       currency: 'USD',
       type: txTypes[i % 4],
-      status: 'completed',
+      status: 'pending',
       riskScore: Math.random(),
       riskLevel: riskLevels[i % 4],
       isFraud: i % 5 === 0,
