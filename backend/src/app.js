@@ -30,6 +30,8 @@ app.get("/", (req, res) => {
   });
 });
 
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500, message: 'Too many requests' });
+
 app.get("/api/seed", async (req, res) => {
   try {
     const mongoose = require('mongoose');
