@@ -37,31 +37,50 @@ app.get("/api/seed", async (req, res) => {
     const mongoose = require('mongoose');
     const bcrypt = require('bcryptjs');
     
-    // Get existing models
     const User = mongoose.model('User');
     const Transaction = mongoose.model('Transaction');
-    const FraudCase = mongoose.model('FraudCase');
 
-    // Clear existing data
     await User.deleteMany({});
     await Transaction.deleteMany({});
-    await FraudCase.deleteMany({});
 
-    // Create admin user
     const adminPwd = await bcrypt.hash('Admin@1234', 12);
     await User.create({
       userId: 'admin-001',
       email: 'admin@fraudguard.io',
       password: adminPwd,
       name: 'Admin User',
-      role: 'admin'
+      role: 'admin',
+      riskScore: 0,
+      riskLevel: 'low',
+      isFlagged: false,
+      totalTransactions: 20,
+      flaggedTransactions: 4
     });
 
-    res.json({ message: "Seeding completed successfully!" });
+    const txTypes = ['purchase','transfer','withdrawal','payment'];
+    const riskLevels = ['low','medium','high','critical'];
+    const txDocs = Array.from({length: 20}, (_, i) => ({
+      transactionId: `tx-00${i+1}`,
+      userId: 'admin-001',
+      amount: Math.floor(Math.random() * 5000) + 100,
+      currency: 'USD',
+      type: txTypes[i % 4],
+      status: 'completed',
+      riskScore: Math.random(),
+      riskLevel: riskLevels[i % 4],
+      isFraud: i % 5 === 0,
+      ipAddress: `192.168.1.${i+1}`,
+      deviceId: `dev-00${i+1}`,
+    }));
+
+    await Transaction.insertMany(txDocs);
+    res.json({ message: "Seeding completed!", users: 1, transactions: 20 });
   } catch(err) {
     res.json({ error: err.message });
   }
 });
+
+    
 
 app.use('/api', limiter);
 
