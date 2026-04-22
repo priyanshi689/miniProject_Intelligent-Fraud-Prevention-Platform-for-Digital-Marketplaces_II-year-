@@ -82,6 +82,7 @@ await User.create({
 app.use('/api', limiter);
 
 app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/seed', require('./routes/seed'));
 app.use('/api/transactions', require('./routes/transaction.routes'));
 app.use('/api/cases', require('./routes/case.routes'));
 app.use('/api/graph', require('./routes/graph.routes'));
