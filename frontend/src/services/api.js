@@ -1,12 +1,10 @@
 import axios from 'axios';
 
-// ✅ Fixed — uses env variable in production, proxy in dev
-const api = axios.create({ 
-  baseURL: import.meta.env.VITE_API_URL 
-    ? `${import.meta.env.VITE_API_URL}/api` 
-    : '/api', 
-  timeout: 10000 
-});
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
+const api = axios.create({ baseURL: BASE_URL, timeout: 10000 });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
