@@ -11,11 +11,15 @@ import GraphView from './pages/GraphView';
 import Analytics from './pages/Analytics';
 import Login from './pages/Login';
 import LoadingSpinner from './components/shared/LoadingSpinner';
-import AlertToastContainer from "./components/AlertToast";
+import AlertToast from './components/transactions/AlertToast';
 
 const ProtectedLayout = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><LoadingSpinner size="lg" /></div>;
+  if (loading) return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <LoadingSpinner size="lg" />
+    </div>
+  );
   if (!user) return <Navigate to="/login" replace />;
   return (
     <div className="flex bg-gray-950 min-h-screen">
@@ -30,7 +34,7 @@ export default function App() {
     <Provider store={store}>
       <AuthProvider>
         <SocketProvider>
-          <AlertToastContainer />
+          <AlertToast alerts={[]} />
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
