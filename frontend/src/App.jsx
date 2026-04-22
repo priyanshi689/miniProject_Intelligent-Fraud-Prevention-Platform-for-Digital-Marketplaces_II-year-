@@ -11,7 +11,7 @@ import GraphView from './pages/GraphView';
 import Analytics from './pages/Analytics';
 import Login from './pages/Login';
 import LoadingSpinner from './components/shared/LoadingSpinner';
-import AlertToast from './components/transactions/AlertToast';
+import AlertToast from './components/AlertToast';
 
 const ProtectedLayout = ({ children }) => {
   const { user, loading } = useAuth();
