@@ -76,7 +76,7 @@ router.get('/run', async (req, res) => {
       updatedAt: new Date()
     }));
 
-    await db.collection('cases').insertMany(casesData);
+    await db.collection('fraudcases').insertMany(casesData);
 
     res.json({ success: true, users: usersData.length, transactions: transactions.length, cases: casesData.length });
   } catch (err) {
