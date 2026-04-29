@@ -1,6 +1,3 @@
-// frontend/src/pages/Dashboard.jsx
-// Replace your existing Dashboard with this improved version
-
 import { useEffect, useState } from "react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -10,16 +7,14 @@ import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL || "https://fraud-backend-lb7d.onrender.com";
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, icon, color, trend }) {
+function StatCard({ label, value, sub, icon, color }) {
   const colors = {
-    blue:   { bg: "bg-blue-500/10",   border: "border-blue-500/30",   text: "text-blue-400",   dot: "bg-blue-400" },
-    red:    { bg: "bg-red-500/10",    border: "border-red-500/30",    text: "text-red-400",    dot: "bg-red-400" },
-    yellow: { bg: "bg-yellow-500/10", border: "border-yellow-500/30", text: "text-yellow-400", dot: "bg-yellow-400" },
-    green:  { bg: "bg-green-500/10",  border: "border-green-500/30",  text: "text-green-400",  dot: "bg-green-400" },
+    blue:   { bg: "bg-blue-500/10",   border: "border-blue-500/30",   text: "text-blue-400"   },
+    red:    { bg: "bg-red-500/10",    border: "border-red-500/30",    text: "text-red-400"    },
+    yellow: { bg: "bg-yellow-500/10", border: "border-yellow-500/30", text: "text-yellow-400" },
+    green:  { bg: "bg-green-500/10",  border: "border-green-500/30",  text: "text-green-400"  },
   };
   const c = colors[color] || colors.blue;
-
   return (
     <div className={`rounded-xl border p-5 ${c.bg} ${c.border} flex flex-col gap-2`}>
       <div className="flex items-center justify-between">
@@ -27,19 +22,11 @@ function StatCard({ label, value, sub, icon, color, trend }) {
         <span className="text-2xl">{icon}</span>
       </div>
       <div className={`text-3xl font-bold ${c.text}`}>{value}</div>
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">{sub}</span>
-        {trend !== undefined && (
-          <span className={`text-xs font-medium ${trend >= 0 ? "text-red-400" : "text-green-400"}`}>
-            {trend >= 0 ? "↑" : "↓"} {Math.abs(trend)}% vs yesterday
-          </span>
-        )}
-      </div>
+      <div className="text-xs text-gray-500">{sub}</div>
     </div>
   );
 }
 
-// ─── Risk Badge ───────────────────────────────────────────────────────────────
 function RiskBadge({ level }) {
   const map = {
     critical: "bg-red-500/20 text-red-300 border-red-500/40",
@@ -54,7 +41,6 @@ function RiskBadge({ level }) {
   );
 }
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
@@ -69,17 +55,15 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyChart() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-600">
       <span className="text-4xl">📊</span>
-      <p className="text-sm">No data yet — ingest some transactions to see trends</p>
+      <p className="text-sm">No data yet</p>
     </div>
   );
 }
 
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [trend, setTrend] = useState([]);
@@ -98,8 +82,9 @@ export default function Dashboard() {
       axios.get(`${API}/api/transactions?limit=5&sort=-createdAt`, { headers }),
     ])
       .then(([s, t, d, r]) => {
-        setStats(s.data);
-        // Normalize trend data
+        // FIX 1: API wraps data in .data.data
+        setStats(s.data.data);
+
         const trendData = Array.isArray(t.data) ? t.data : t.data?.data || [];
         setTrend(
           trendData.map((item) => ({
@@ -108,7 +93,7 @@ export default function Dashboard() {
             Flagged: item.flagged ?? item.fraud ?? 0,
           }))
         );
-        // Normalize distribution
+
         const distData = Array.isArray(d.data) ? d.data : d.data?.data || [];
         setDistribution(
           distData.map((item) => ({
@@ -116,7 +101,8 @@ export default function Dashboard() {
             count: item.count ?? 0,
           }))
         );
-        setRecentTxns(r.data?.transactions || r.data?.data || []);
+
+        setRecentTxns(r.data?.data || r.data?.transactions || []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -137,7 +123,6 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-6 bg-gray-950 min-h-screen">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Fraud Intelligence Dashboard</h1>
@@ -154,7 +139,8 @@ export default function Dashboard() {
         <StatCard
           label="Total Transactions"
           value={stats?.total?.toLocaleString() ?? "—"}
-          sub={`$${((stats?.totalVolume || 0) / 1000).toFixed(1)}k volume`}
+          // FIX 2: API returns totalAmount not totalVolume
+          sub={`$${((stats?.totalAmount || 0) / 1000).toFixed(1)}k volume`}
           icon="📈"
           color="blue"
         />
@@ -174,7 +160,8 @@ export default function Dashboard() {
         />
         <StatCard
           label="Fraud Rate"
-          value={`${((stats?.fraudRate || 0) * 100).toFixed(2)}%`}
+          // FIX 3: API returns fraudRate as a % string already e.g. "12.50"
+          value={`${stats?.fraudRate || "0.00"}%`}
           sub={`${stats?.approved ?? 0} approved`}
           icon="✅"
           color="green"
@@ -183,13 +170,10 @@ export default function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Trend Chart — takes 2/3 width */}
         <div className="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-gray-300 mb-4">Fraud Trend (7 days)</h2>
           <div className="h-52">
-            {trend.length === 0 ? (
-              <EmptyChart />
-            ) : (
+            {trend.length === 0 ? <EmptyChart /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trend} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                   <defs>
@@ -215,13 +199,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Risk Distribution — 1/3 width */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-gray-300 mb-4">Risk Distribution</h2>
           <div className="h-52">
-            {distribution.length === 0 ? (
-              <EmptyChart />
-            ) : (
+            {distribution.length === 0 ? <EmptyChart /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={distribution} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
@@ -247,9 +228,7 @@ export default function Dashboard() {
           <a href="/transactions" className="text-xs text-blue-400 hover:underline">View all →</a>
         </div>
         {recentTxns.length === 0 ? (
-          <div className="flex items-center justify-center py-12 text-gray-600 text-sm">
-            No transactions yet
-          </div>
+          <div className="flex items-center justify-center py-12 text-gray-600 text-sm">No transactions yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -265,10 +244,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {recentTxns.map((txn, i) => (
-                  <tr
-                    key={txn._id || i}
-                    className="border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors"
-                  >
+                  <tr key={txn._id || i} className="border-b border-gray-800/50 hover:bg-gray-800/40 transition-colors">
                     <td className="px-5 py-3 font-mono text-xs text-gray-400">
                       #{(txn.transactionId || txn._id || "").slice(-10)}
                     </td>
@@ -294,14 +270,10 @@ export default function Dashboard() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3">
-                      <RiskBadge level={txn.riskLevel || "low"} />
-                    </td>
+                    <td className="px-5 py-3"><RiskBadge level={txn.riskLevel || "low"} /></td>
                     <td className="px-5 py-3 capitalize text-gray-300 text-xs">{txn.status}</td>
                     <td className="px-5 py-3 text-gray-500 text-xs">
-                      {txn.createdAt
-                        ? new Date(txn.createdAt).toLocaleTimeString()
-                        : "—"}
+                      {txn.createdAt ? new Date(txn.createdAt).toLocaleTimeString() : "—"}
                     </td>
                   </tr>
                 ))}
