@@ -1,6 +1,5 @@
 const User = require('../models/User.model');
 const Transaction = require('../models/Transaction.model');
-const { getRiskLevel } = require('../utils/featureExtractor');
 
 const getHighRiskUsers = async (req, res, next) => {
   try {
@@ -14,6 +13,7 @@ const getHighRiskUsers = async (req, res, next) => {
 const getRiskTrend = async (req, res, next) => {
   try {
     const days = Number(req.query.days) || 7;
+    // FIX: Date.now() was broken as a Markdown link
     const since = new Date(Date.now() - days * 86400000);
     const trend = await Transaction.aggregate([
       { $match: { createdAt: { $gte: since } } },
