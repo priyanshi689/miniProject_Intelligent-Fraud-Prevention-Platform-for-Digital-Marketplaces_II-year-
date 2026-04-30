@@ -26,16 +26,16 @@ router.get('/run', async (req, res) => {
         createdAt: new Date() 
       },
       ...Array.from({ length: 20 }, (_, i) => ({
-        email: `user${i + 1}@marketplace.io`,
+        email: 'user' + (i + 1) + '@marketplace.io',
         password: hashedPw,
         role: 'viewer',
-        name: `User ${i + 1}`,
+        name: 'User ' + (i + 1),
         isActive: true,
         createdAt: new Date()
       }))
     ];
 
-    // Clear existing data from your specific collections
+    // Clear existing data
     await db.collection('users').deleteMany({});
     await db.collection('transactions').deleteMany({});
     await db.collection('fraudcases').deleteMany({});
@@ -56,13 +56,13 @@ router.get('/run', async (req, res) => {
       const createdAt = new Date(now - Math.random() * 6 * 86400000);
 
       return {
-        transactionId: `TXN-${now}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+        transactionId: 'TXN-' + now + '-' + i + '-' + Math.random().toString(36).slice(2, 6),
         userId,
         amount: Math.round((isFraud ? 800 + Math.random() * 9000 : 10 + Math.random() * 490) * 100) / 100,
         paymentType: payTypes[Math.floor(Math.random() * payTypes.length)],
         transactionType: txnTypes[Math.floor(Math.random() * txnTypes.length)],
-        deviceId: `DEV-${Math.floor(Math.random() * 30)}`,
-        ipAddress: `192.168.${Math.floor(Math.random() * 20)}.1`,
+        deviceId: 'DEV-' + Math.floor(Math.random() * 30),
+        ipAddress: '192.168.' + Math.floor(Math.random() * 20) + '.1',
         riskScore: Math.round(score * 1000) / 1000,
         riskLevel: level,
         status,
@@ -74,19 +74,18 @@ router.get('/run', async (req, res) => {
 
     await db.collection('transactions').insertMany(transactions);
 
-    // Seed 20 fraud cases into the 'fraudcases' collection
     const highRisk = transactions.filter(t => t.riskLevel === 'critical' || t.riskLevel === 'high').slice(0, 20);
     const caseStatuses = ['open', 'investigating', 'confirmed fraud', 'false positive', 'closed'];
     
     const casesData = highRisk.map((txn, i) => ({
-      caseId: `CASE-${now}-${i}`,
+      caseId: 'CASE-' + now + '-' + i,
       transactionId: txn.transactionId,
       userId: txn.userId,
       status: caseStatuses[Math.floor(Math.random() * caseStatuses.length)],
       riskScore: txn.riskScore,
       riskLevel: txn.riskLevel,
       amount: txn.amount,
-      description: `Suspicious ${txn.transactionType} of $${txn.amount}`,
+      description: 'Suspicious ' + txn.transactionType + ' of $' + txn.amount,
       assignedTo: userIds[1],
       createdAt: new Date(now - Math.random() * 6 * 86400000),
       updatedAt: new Date()
